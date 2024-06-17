@@ -1,19 +1,28 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/31-rat4/gmail-cli/cmd/ascess"
 	"log"
-	"os"
 )
 
 func main() {
-
-	Ascess := ascess.NewAscessHandler("test2")
-	fmt.Println(Ascess.GetConfigFromFile())
-	b, err := os.ReadFile("credentials.json")
+	ctx := context.Background()
+	AscessHandler := ascess.NewAscessHandler(ctx)
+	srv := AscessHandler.GenGmailClient()
+	fmt.Println(srv)
+	user := "me"
+	r, err := srv.Users.Labels.List(user).Do()
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		log.Fatalf("Unable to retrieve labels: %v", err)
 	}
-	fmt.Println(b)
+	if len(r.Labels) == 0 {
+		fmt.Println("No labels found.")
+		return
+	}
+	fmt.Println("Labels:")
+	for _, l := range r.Labels {
+		fmt.Printf("- %s\n", l.Name)
+	}
 }
